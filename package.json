@@ -1,7 +1,8 @@
 {
   "name": "@luckylillia/plugin-aiprovider",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Configure OpenAI-compatible AI services and model lists for other plugins",
+  "author": "linyuchen",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/LuckyLilliaDev/lucky-lillia-plugin-aiprovider.git"
