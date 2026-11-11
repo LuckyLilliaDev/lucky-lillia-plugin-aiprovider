@@ -100,3 +100,27 @@ npm pack --dry-run
 开发依赖使用 npm 上的 SDK 和 Cordis。测试通过 SDK 测试工具启动本地模拟 AI 接口，不需要真实 API Key。`npm run dev` 持续编译源码；`prepack` 会在打包前重新构建。发布包包含 `lib/`、`src/` 和 `webui/`，后端入口为 `lib/index.js`，公开类型为 `lib/types.d.ts`。
 
 需要与 Bot 联调时，将插件目录放入 Bot 的 `data/plugins/`，或启动 Bot 时通过 `--plugin-dir <插件父目录>` 添加扫描目录，再在 WebUI 中重新扫描并启用。
+
+## 自动发布
+
+GitHub Actions 的 `.github/workflows/publish.yml` 在推送 `v<版本号>` 标签时发布到 npm，也可在 Actions 中手动运行；手动发布只允许选择 `main` 分支。流程使用 Node.js 24 和 npm 11.16.0，先安装锁定的依赖、构建、运行测试，再发布已验证的压缩包，并生成 npm provenance。依赖安装不执行生命周期脚本，打包和发布不会重复构建；已发布的版本会报错，不能覆盖。手动运行时可勾选 `dry_run`，先验证构建、测试和打包，不发布到 npm。
+
+发布使用 OIDC，无需配置 npm Token。首次配置或重建绑定时，需要先有 npm 包，再在 npm 的 `@luckylillia/plugin-aiprovider` 包设置中添加 **Trusted Publisher → GitHub Actions**，填写：
+
+| 字段 | 值 |
+| --- | --- |
+| Organization or user | `LuckyLilliaDev` |
+| Repository | `lucky-lillia-plugin-aiprovider` |
+| Workflow filename | `publish.yml` |
+| Environment | 留空 |
+
+此设置需要包维护者在 npm 完成，仓库里的工作流不会自动创建绑定。
+
+后续发布时，使用 `npm version patch --no-git-tag-version` 更新 `package.json` 和 `package-lock.json`，提交并推送改动，再创建与版本一致的标签并推送。例如版本为 `1.0.1` 时：
+
+```sh
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+工作流会检查包名、仓库地址、锁文件版本和标签；标签必须与 `package.json` 的版本完全一致。
