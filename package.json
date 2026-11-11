@@ -1,0 +1,73 @@
+{
+  "name": "@luckylillia/plugin-aiprovider",
+  "version": "1.0.0",
+  "description": "Configure OpenAI-compatible AI services and model lists for other plugins",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LuckyLilliaDev/lucky-lillia-plugin-aiprovider.git"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types.d.ts",
+      "development": "./src/index.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib",
+    "src",
+    "webui"
+  ],
+  "scripts": {
+    "build": "tsc -p .",
+    "dev": "tsc -p . --watch",
+    "test": "vitest run",
+    "prepack": "npm run build"
+  },
+  "keywords": [
+    "luckylillia-plugin"
+  ],
+  "peerDependencies": {
+    "@luckylillia/plugin-sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "@luckylillia/plugin-sdk": "^1.0.1",
+    "@types/node": "^24.12.4",
+    "cordis": "4.0.0-rc.11",
+    "typescript": "^7.0.2",
+    "undici": "^7.18.2",
+    "vitest": "^4.1.11"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org"
+  },
+  "llbot": {
+    "title": "AI 服务",
+    "category": "service",
+    "description": {
+      "zh": "在这里配置 AI 服务的接口地址、API Key 和模型列表，由其他插件选择服务和模型。支持 DeepSeek 等 OpenAI 兼容接口",
+      "en": "Configure AI service addresses, API keys and model lists for other plugins to choose from. Supports DeepSeek and other OpenAI-compatible APIs"
+    },
+    "icon": "brain",
+    "service": {
+      "implements": [
+        "ai"
+      ],
+      "required": [
+        "http"
+      ],
+      "optional": [
+        "webuiServer"
+      ],
+      "labels": {
+        "ai": "AI 服务"
+      }
+    },
+    "webui": "webui/index.js"
+  }
+}
