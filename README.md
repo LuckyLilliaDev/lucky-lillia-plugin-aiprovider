@@ -1,52 +1,14 @@
 # @luckylillia/plugin-aiprovider
 
-LuckyLillia Bot 的「AI 服务」插件。集中管理 OpenAI 兼容接口的地址、API Key 和模型列表，通过 `ctx.ai` 为其他插件提供对话、流式回答和 API 请求。每个调用插件可以选择不同的服务和模型；本插件本身不注册聊天指令。
-
-## 安装与配置
-
-发布到 npm 后，可以下载插件压缩包：
-
-```sh
-npm pack @luckylillia/plugin-aiprovider
-```
-
-在 Bot WebUI 的「插件市场」安装 AI 服务。安装后，到「插件列表」信任并启用「AI 服务」，批准加载插件界面。如果插件已收录到所用市场，也可以直接从市场安装。
-
-1. 打开「AI 服务」设置，点击「添加服务」。填写服务名称、接口地址和 API Key。接口地址填到版本号，例如 `https://api.deepseek.com/v1`，插件会自动拼接 `/chat/completions` 等路径。
-2. 点击「自动获取」读取模型列表，或手动添加服务商提供的模型 ID。需要处理图片时，请选择支持图片输入的模型。
-3. 在弹窗中选择模型并测试，点击「确定」返回列表。按需设置默认服务，最后点击页面外层的「保存配置」。测试只使用当前草稿，不会自动保存。
-4. 在使用 AI 的插件中选择服务和模型。未指定时，使用默认服务和它的首个模型；默认服务为空或不存在时，使用列表中的第一个服务。
-
-请求通过 Bot 的 HTTP 服务发送，可沿用内置「代理」插件的配置；单个服务可以关闭「走代理」。API Key 可以留空；若服务商要求其他认证头，可通过「额外的请求头」配置。
+幸运莉莉娅 的「AI 服务」插件。集中管理 OpenAI 兼容接口的地址、API Key 和模型列表，通过 `ctx.ai` 为其他插件提供对话、流式回答和 API 请求。每个调用插件可以选择不同的服务和模型。
 
 ## 给其他插件使用
 
 `ctx.ai` 的类型由本包提供。开发调用方时安装类型依赖：
 
 ```sh
-npm install -D @luckylillia/plugin-sdk@^1.0.1 @luckylillia/plugin-aiprovider@^1.0.0
+npm install -D @luckylillia/plugin-sdk @luckylillia/plugin-aiprovider
 ```
-
-在调用方的 `package.json` 中合并以下配置：
-
-```json
-{
-  "peerDependencies": {
-    "@luckylillia/plugin-sdk": "^1.0.1",
-    "@luckylillia/plugin-aiprovider": "^1.0.0"
-  },
-  "llbot": {
-    "dependencies": {
-      "@luckylillia/plugin-aiprovider": "^1.0.0"
-    },
-    "service": {
-      "required": ["ai", "commands"]
-    }
-  }
-}
-```
-
-`peerDependencies` 声明 API 兼容范围，`llbot.dependencies` 声明宿主需要安装的插件包，代码中的 `inject` 等待服务就绪。市场自动补装依赖需要该包已被市场收录；通过 npm 安装开发依赖不会在 Bot 中自动启用服务插件。
 
 下面的例子注册一个提问指令，模型选项会在 WebUI 中显示服务和模型下拉框：
 
@@ -84,43 +46,6 @@ export function apply(ctx: Context, config: Config) {
 | `stream(input, options?)` | 返回 `AsyncIterable<string>`，逐段读取回答 |
 | `request(ai, path, init?)` | 调用所选服务的其他接口，自动带上认证和配置的请求头 |
 
-对话选项中的 `ai` 是配置的服务名称，`model` 是模型 ID。图片可以用 `{ type: 'image', data }` 传入 `Uint8Array` 或 `ArrayBuffer`；QQ 图片建议先下载字节，避免服务商无法读取临时链接。服务错误可按 `AiError.kind` 区分配置、认证、余额、限流和网络等原因；`AiError` 是公开类型，判断时不要使用 `instanceof`。
+对话选项中的 `ai` 是配置的服务名称，`model` 是模型 ID。图片可以用 `{ type: 'image', data }` 传入 `Uint8Array` 或 `ArrayBuffer。
 
-## 开发
 
-在本插件目录执行即可，无需先检出或构建 Bot 仓库：
-
-```sh
-npm install
-npm test
-npm run build
-npm pack --dry-run
-```
-
-开发依赖使用 npm 上的 SDK 和 Cordis。测试通过 SDK 测试工具启动本地模拟 AI 接口，不需要真实 API Key。`npm run dev` 持续编译源码；`prepack` 会在打包前重新构建。发布包包含 `lib/`、`src/` 和 `webui/`，后端入口为 `lib/index.js`，公开类型为 `lib/types.d.ts`。
-
-需要与 Bot 联调时，将插件目录放入 Bot 的 `data/plugins/`，或启动 Bot 时通过 `--plugin-dir <插件父目录>` 添加扫描目录，再在 WebUI 中重新扫描并启用。
-
-## 自动发布
-
-GitHub Actions 的 `.github/workflows/publish.yml` 在推送 `v<版本号>` 标签时发布到 npm，也可在 Actions 中手动运行；手动发布只允许选择 `main` 分支。流程使用 Node.js 24 和 npm 11.16.0，先安装锁定的依赖、构建、运行测试，再发布已验证的压缩包，并生成 npm provenance。依赖安装不执行生命周期脚本，打包和发布不会重复构建；已发布的版本会报错，不能覆盖。手动运行时可勾选 `dry_run`，先验证构建、测试和打包，不发布到 npm。
-
-发布使用 OIDC，无需配置 npm Token。首次配置或重建绑定时，需要先有 npm 包，再在 npm 的 `@luckylillia/plugin-aiprovider` 包设置中添加 **Trusted Publisher → GitHub Actions**，填写：
-
-| 字段 | 值 |
-| --- | --- |
-| Organization or user | `LuckyLilliaDev` |
-| Repository | `lucky-lillia-plugin-aiprovider` |
-| Workflow filename | `publish.yml` |
-| Environment | 留空 |
-
-此设置需要包维护者在 npm 完成，仓库里的工作流不会自动创建绑定。
-
-后续发布时，使用 `npm version patch --no-git-tag-version` 更新 `package.json` 和 `package-lock.json`，提交并推送改动，再创建与版本一致的标签并推送。例如版本为 `1.0.1` 时：
-
-```sh
-git tag v1.0.1
-git push origin v1.0.1
-```
-
-工作流会检查包名、仓库地址、锁文件版本和标签；标签必须与 `package.json` 的版本完全一致。
